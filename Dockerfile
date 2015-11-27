@@ -1,20 +1,15 @@
-# Dockerfile for statsd
-#
-# VERSION               0.1
-# DOCKER-VERSION        0.4.0
-
-from    ubuntu:12.10
-run     echo "deb http://archive.ubuntu.com/ubuntu quantal main universe" > /etc/apt/sources.list
-run     apt-get -y update
-run     apt-get -y install wget git python
-run     wget -O /tmp/node-v0.11.0.tar.gz http://nodejs.org/dist/v0.11.0/node-v0.11.0-linux-x64.tar.gz 
-run     tar -C /usr/local/ --strip-components=1 -zxvf /tmp/node-v0.11.0.tar.gz
-run     rm /tmp/node-v0.11.0.tar.gz
-run     git clone git://github.com/etsy/statsd.git statsd
-
-add     ./config.js ./statsd/config.js
-
-expose  8125/udp
-expose  8126/tcp
-
-cmd     /usr/local/bin/node /statsd/stats.js /statsd/config.js
+from ubuntu:latest
+RUN apt-get update
+RUN apt-get upgrade -y
+RUN apt-get install -y nodejs wget git python
+# needs this to find the nodejs exec
+RUN ln -s /usr/bin/nodejs /usr/bin/node
+RUN apt-get install -y npm
+RUN git clone git://github.com/etsy/statsd.git statsd
+WORKDIR /statsd
+RUN cd /statsd
+RUN npm install statsd-librato-backend
+ADD ./config.js /statsd/config.js
+EXPOSE 8125/udp
+EXPOSE 8126/tcp
+CMD node /statsd/stats.js /statsd/config.js
